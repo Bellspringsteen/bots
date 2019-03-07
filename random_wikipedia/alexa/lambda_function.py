@@ -11,6 +11,7 @@ from ask_sdk_core.utils import is_request_type, is_intent_name
 from ask_sdk_core.handler_input import HandlerInput
 from ask_sdk_model import Response
 import wikipedia
+import random
 
 SKILL_NAME = "Random Wikipedia"
 HELP_MESSAGE = "You can say tell me a space fact, or, you can say exit... What can I help you with?"
@@ -25,26 +26,68 @@ logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
 MAX_CHARACTERS = 70000
 
+def shorten_and_strip_to_text(incoming_text):
+    
+
 # Built-in Intent Handlers
 class GetRandomWikipediaHandler(AbstractRequestHandler):
     """Handler for Skill Launch and GetNewFact Intent."""
     def can_handle(self, handler_input):
         # type: (HandlerInput) -> bool
-        return is_request_type("LaunchRequest")(handler_input)
+        return (is_request_type("LaunchRequest")(handler_input))
 
     def handle(self, handler_input):
         # type: (HandlerInput) -> Response
+        logger.info("In GetRandomWikipediaHandler")
 
         article_name = wikipedia.random()
         article = wikipedia.page(article_name)
 
-        speech = article.content
+        speech = "TEST"+article.content
 
         speech = speech.replace("=","")
 
         if len(speech)>MAX_CHARACTERS:
             speech = speech[:MAX_CHARACTERS]
 
+        handler_input.response_builder.speak(str(speech))
+        return handler_input.response_builder.response
+
+# Built-in Intent Handlers
+class GetRandomArticleWikipediaHandler(AbstractRequestHandler):
+    """Handler for Skill Launch and GetNewFact Intent."""
+    def can_handle(self, handler_input):
+        # type: (HandlerInput) -> bool
+        return (is_intent_name("wikipedia_article_about")(handler_input))
+
+    def handle(self, handler_input):
+        # type: (HandlerInput) -> Response
+        slots = handler_input.request_envelope.request.intent.slots
+
+        logger.info("In GetRandomArticleWikipediaHandler" + str(handler_input.request_envelope.request.intent.slots))
+
+        speech = ""
+        slot_subject = slots["subject"]
+        if slot_subject:
+            slot_subject_value = slot_subject.value
+            article_list = wikipedia.search(slot_subject_value,50)
+            if len(article_list) == 0:
+                article_list = wikipedia.search(slot_subject_value)
+            article_name = random.choice(article_list)
+            article = wikipedia.page(article_name)
+
+            speech = "TEST" + article.content
+
+            speech = speech.replace("=", "")
+
+            if len(speech) > MAX_CHARACTERS:
+                speech = speech[:MAX_CHARACTERS]
+
+        else:
+            speech += "No Subject"
+
+
+        #handler_input.response_builder.speak(str(speech+slot_subject))
         handler_input.response_builder.speak(str(speech))
         return handler_input.response_builder.response
 
@@ -125,7 +168,7 @@ class CatchAllExceptionHandler(AbstractExceptionHandler):
 
     def handle(self, handler_input, exception):
         # type: (HandlerInput, Exception) -> Response
-        logger.info("In CatchAllExceptionHandler")
+        logger.info("In CatchAllExceptionHandler" + str(handler_input))
         logger.error(exception, exc_info=True)
 
         handler_input.response_builder.speak(EXCEPTION_MESSAGE).ask(
@@ -156,6 +199,7 @@ sb.add_request_handler(CancelOrStopIntentHandler())
 sb.add_request_handler(FallbackIntentHandler())
 sb.add_request_handler(SessionEndedRequestHandler())
 sb.add_request_handler(GetRandomWikipediaHandler())
+sb.add_request_handler(GetRandomArticleWikipediaHandler())
 
 # Register exception handlers
 sb.add_exception_handler(CatchAllExceptionHandler())

@@ -16,3 +16,6 @@ zip -r9 ../function.zip .
 cd ..
 
 aws lambda update-function-code --function-name random_wikipedia --zip-file fileb://function.zip
+
+ask random for article about cats
+
