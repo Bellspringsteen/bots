@@ -28,6 +28,8 @@ logger.setLevel(logging.DEBUG)
 MAX_CHARACTERS = 1000
 
 def shorten_and_strip_to_text(incoming_text):
+    incoming_text = incoming_text.replace("=","")
+    incoming_text = incoming_text.replace('"','')
     incoming_text = re.sub(r'^[a-zA-Z0-9,.!? ]*$', '', incoming_text)
 
     if len(incoming_text) > MAX_CHARACTERS:
