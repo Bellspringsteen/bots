@@ -12,6 +12,7 @@ from ask_sdk_core.handler_input import HandlerInput
 from ask_sdk_model import Response
 import wikipedia
 import random
+import re
 
 SKILL_NAME = "Random Wikipedia"
 HELP_MESSAGE = "You can say tell me a space fact, or, you can say exit... What can I help you with?"
@@ -24,10 +25,14 @@ EXCEPTION_MESSAGE = "Sorry. I cannot help you with that."
 sb = SkillBuilder()
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
-MAX_CHARACTERS = 70000
+MAX_CHARACTERS = 1000
 
 def shorten_and_strip_to_text(incoming_text):
-    
+    incoming_text = re.sub(r'^[a-zA-Z0-9,.!? ]*$', '', incoming_text)
+
+    if len(incoming_text) > MAX_CHARACTERS:
+        incoming_text = incoming_text[:MAX_CHARACTERS]
+    return  incoming_text
 
 # Built-in Intent Handlers
 class GetRandomWikipediaHandler(AbstractRequestHandler):
@@ -38,17 +43,12 @@ class GetRandomWikipediaHandler(AbstractRequestHandler):
 
     def handle(self, handler_input):
         # type: (HandlerInput) -> Response
-        logger.info("In GetRandomWikipediaHandler")
-
         article_name = wikipedia.random()
         article = wikipedia.page(article_name)
 
-        speech = "TEST"+article.content
+        speech = article.content
 
-        speech = speech.replace("=","")
-
-        if len(speech)>MAX_CHARACTERS:
-            speech = speech[:MAX_CHARACTERS]
+        speech = shorten_and_strip_to_text(speech)
 
         handler_input.response_builder.speak(str(speech))
         return handler_input.response_builder.response
@@ -64,8 +64,6 @@ class GetRandomArticleWikipediaHandler(AbstractRequestHandler):
         # type: (HandlerInput) -> Response
         slots = handler_input.request_envelope.request.intent.slots
 
-        logger.info("In GetRandomArticleWikipediaHandler" + str(handler_input.request_envelope.request.intent.slots))
-
         speech = ""
         slot_subject = slots["subject"]
         if slot_subject:
@@ -74,24 +72,17 @@ class GetRandomArticleWikipediaHandler(AbstractRequestHandler):
             if len(article_list) == 0:
                 article_list = wikipedia.search(slot_subject_value)
             article_name = random.choice(article_list)
+            logger.info("article_name:"+article_name)
             article = wikipedia.page(article_name)
-
-            speech = "TEST" + article.content
-
-            speech = speech.replace("=", "")
-
-            if len(speech) > MAX_CHARACTERS:
-                speech = speech[:MAX_CHARACTERS]
-
+            speech = article.content
+            speech = shorten_and_strip_to_text(speech)
+            logger.info("shorten_and_strip_to_text:")
         else:
             speech += "No Subject"
 
-
-        #handler_input.response_builder.speak(str(speech+slot_subject))
         handler_input.response_builder.speak(str(speech))
         return handler_input.response_builder.response
 
-# TODO add ability to say random wikipedia about
 # TODO wikipedia this day in 1947
 
 class HelpIntentHandler(AbstractRequestHandler):
