@@ -17,7 +17,5 @@ cd ..
 
 aws lambda update-function-code --function-name random_wikipedia --zip-file fileb://function.zip
 
-ask random for article about cats
-
 ask the internet for article about cats
 

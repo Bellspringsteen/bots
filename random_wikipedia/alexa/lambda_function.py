@@ -27,6 +27,9 @@ logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
 MAX_CHARACTERS = 1000
 
+# TODO wikipedia this day in 1947
+# TODO add help instructions if it fails
+
 def shorten_and_strip_to_text(incoming_text):
     incoming_text = incoming_text.replace("=","")
     incoming_text = incoming_text.replace('"','')
@@ -84,8 +87,6 @@ class GetRandomArticleWikipediaHandler(AbstractRequestHandler):
 
         handler_input.response_builder.speak(str(speech))
         return handler_input.response_builder.response
-
-# TODO wikipedia this day in 1947
 
 class HelpIntentHandler(AbstractRequestHandler):
     """Handler for Help Intent."""
